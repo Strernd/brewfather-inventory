@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import FermentablesTable from "@/components/fermentables-table";
 import HopsTable from "@/components/hops-table";
 import { ApiKeyDialog } from "@/components/api-key-dialog";
@@ -13,9 +13,9 @@ import {
 export default function Home() {
   const [userId, setUserId] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState<string | null>(null);
-  const [batches, setBatches] = useState([]);
-  const [fermentablesInventory, setFermentablesInventory] = useState([]);
-  const [hopsInventory, setHopsInventory] = useState([]);
+  const [batches, setBatches] = useState<any[]>([]);
+  const [fermentablesInventory, setFermentablesInventory] = useState<any[]>([]);
+  const [hopsInventory, setHopsInventory] = useState<any[]>([]);
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("brewfatherUserId");
@@ -26,23 +26,23 @@ export default function Home() {
     }
   }, []);
 
-  useEffect(() => {
-    if (userId && apiKey) {
-      fetchData();
-    }
-  }, [userId, apiKey]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!userId || !apiKey) return;
 
     const batchesData = await getBatchesWithFermentables(userId, apiKey);
     const fermentablesData = await getFermentables(userId, apiKey);
     const hopsData = await getHops(userId, apiKey);
 
-    setBatches(batchesData as any);
-    setFermentablesInventory(fermentablesData as any);
-    setHopsInventory(hopsData as any);
-  };
+    setBatches(batchesData);
+    setFermentablesInventory(fermentablesData);
+    setHopsInventory(hopsData);
+  }, [userId, apiKey]);
+
+  useEffect(() => {
+    if (userId && apiKey) {
+      fetchData();
+    }
+  }, [userId, apiKey, fetchData]);
 
   const handleSaveApiKey = (newUserId: string, newApiKey: string) => {
     localStorage.setItem("brewfatherUserId", newUserId);
